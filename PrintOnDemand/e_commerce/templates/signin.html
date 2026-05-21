@@ -7,6 +7,9 @@
     <h2>Sign In</h2>
     <form action="{% url 'signin' %}" method="POST">
         {% csrf_token %}
+        {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
         <div class="input-group">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" class="input-field" required>

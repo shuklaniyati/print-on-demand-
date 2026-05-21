@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - Snazzy{% endblock %}
+
+{% block content %}
+<div class="order-detail-page">
+    <a href="{% url 'profile' %}" class="back-link">← Back to profile</a>
+
+    <header class="order-detail-header">
+        <h1 class="page-heading">Order #{{ order.id }}</h1>
+        <p class="order-detail-date">Placed on {{ order.created_at|date:"F j, Y · g:i A" }}</p>
+        <div class="order-history-badges">
+            <span class="badge badge--status badge--{{ order.status|lower }}">{{ order.status }}</span>
+            <span class="badge badge--payment badge--{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+        </div>
+    </header>
+
+    <div class="profile-layout order-detail-layout">
+        <section class="profile-card">
+            <h2 class="section-title">Items</h2>
+            <ul class="checkout-items order-detail-items">
+                {% for item in order.order_items.all %}
+                <li class="checkout-item">
+                    <div class="checkout-item-info">
+                        {% if item.product.product_image %}
+                        <img src="{{ item.product.product_image.url }}" alt="{{ item.product.name }}">
+                        {% endif %}
+                        <div>
+                            <strong><a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a></strong>
+                            <span>Qty: {{ item.quantity }} · ₹{{ item.price }} each</span>
+                        </div>
+                    </div>
+                    <span class="checkout-item-price">₹{{ item.line_total }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="checkout-total-row">
+                <span>Order total</span>
+                <strong>₹{{ order.total_amount }}</strong>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <h2 class="section-title">Payment &amp; delivery</h2>
+            <dl class="profile-details-list">
+                <div class="profile-detail-row">
+                    <dt>Payment method</dt>
+                    <dd>{{ order.get_payment_method_display|default:"—" }}</dd>
+                </div>
+                <div class="profile-detail-row">
+                    <dt>Payment status</dt>
+                    <dd>{{ order.get_payment_status_display }}</dd>
+                </div>
+                <div class="profile-detail-row">
+                    <dt>Order status</dt>
+                    <dd>{{ order.status }}</dd>
+                </div>
+                {% if order.razorpay_payment_id %}
+                <div class="profile-detail-row">
+                    <dt>Transaction ID</dt>
+                    <dd class="profile-mono">{{ order.razorpay_payment_id }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </section>
+    </div>
+</div>
+{% endblock %}

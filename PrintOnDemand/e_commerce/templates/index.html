@@ -4,62 +4,86 @@
 
 {% block content %}
 {% load static %}
-<div class="main">
-    <div class="leftcontainer">
-        <div class="gift">
-            <a href="{% url 'my_product' %}"><img src="{% static 'svg/gift.svg' %}" alt=""></a>
-            <p>Gifts</p>
-        </div>
-        <div class="Trendings">
-            <a href="{% url 'trending_view' %}"><img src="{% static 'svg/Trending.svg' %}" alt=""></a>
-            <p>Trending</p>
-        </div>
-        <div class="sell">
-            <a href="{% url 'add_product' %}"><img src="{% static 'svg/sell.svg' %}" alt=""></a>
-            <p>Sell</p>
-        </div>
-        <div class="stuff">
-            <a href="{% url 'my_product' %}"><img src="{% static 'svg/stuff.svg' %}" alt=""></a>
-            <p>My Stuff</p>
-        </div>
-        <!-- <div class="explore">
-            <img src="{% static 'svg/explore.svg' %}" alt="">
-            <p>Explore</p>
-        </div> -->
-    </div>
+<div class="home-page">
+    <aside class="home-sidebar" id="home-sidebar">
+        <nav class="sidebar-nav" aria-label="Quick navigation">
+            <a href="{% if gifts_url_args %}{% url gifts_url_name gifts_url_args.0 %}{% else %}{% url gifts_url_name %}{% endif %}" class="sidebar-nav-item">
+                <img src="{% static 'svg/gift.svg' %}" alt="">
+                <span>Gifts</span>
+            </a>
+            <a href="{% url 'trending_view' %}" class="sidebar-nav-item">
+                <img src="{% static 'svg/trending.svg' %}" alt="">
+                <span>Trending</span>
+            </a>
+            <a href="{% url 'add_product' %}" class="sidebar-nav-item">
+                <img src="{% static 'svg/sell.svg' %}" alt="">
+                <span>Sell</span>
+            </a>
+            <a href="{% url 'profile' %}" class="sidebar-nav-item">
+                <img src="{% static 'svg/profile.svg' %}" alt="">
+                <span>Profile</span>
+            </a>
+        </nav>
+    </aside>
 
-    <div class="box1">
-        <a href="{% url 'products_by_category' 'mobilecovers' %}"><img src="{% static 'images/z1.png' %}" alt="photo"></a>
-        <div class="mainbox">
-            <div class="box2">
-                <a href="{% url 'products_by_category' 'clothing' %}"><img src="{% static 'images/z2.jpg' %}" alt=""></a>
-            </div> 
-            <div class="box3">
-                <a href="{% url 'products_by_category' 'mobilecovers' %}"><img src="{% static 'images/z3.jpg' %}" alt=""></a>
-            </div> 
-            <div class="box4">
-                <a href="{% url 'products_by_category' 'mugs' %}"><img src="{% static 'images/z5.jpg' %}" alt=""></a>
-            </div>
-            <div class="box5">
-                <a href="{% url 'products_by_category' 'shoes' %}"><img src="{% static 'images/z6.jpg' %}" alt=""></a>
-            </div>
-        </div>
-                    
-        <div class="Product_list" style="display: flex;">
-            {% for product in product_data %}
-            <div class="products">
-                <a href="{% url 'product_detail' pk=product.id %}">
-                    {% if product.product_image %}
-                        <img src="{{ product.product_image }}" alt="{{ product.name }}">
-                    {% else %}
-                        <p>No image available</p>
-                    {% endif %}
+    <div class="home-content">
+        <section class="hero-banner">
+            <a href="{% url 'products_by_category' hero_category_slug %}" class="hero-banner-link">
+                <img src="{% static 'images/z1.png' %}" alt="Shop mobile covers">
+                <div class="hero-banner-overlay">
+                    <h2>Print your style</h2>
+                    <p>Custom covers, apparel, mugs &amp; more</p>
+                    <span class="hero-cta">Shop now</span>
+                </div>
+            </a>
+        </section>
+
+        {% if categories %}
+        <section class="category-section">
+            <h2 class="section-title">Shop by category</h2>
+            <div class="category-grid">
+                {% for category in categories %}
+                <a href="{% url 'products_by_category' category.slug %}" class="category-card" title="{{ category.name }}">
+                    <div class="category-card-image">
+                        {% if category.preview_image %}
+                        <img src="{% static category.preview_image %}" alt="{{ category.name }}">
+                        {% else %}
+                        <span class="category-card-fallback">{{ category.name|slice:":1" }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="category-card-label">{{ category.name }}</span>
                 </a>
-                <h3>{{ product.name }}</h3>
-                <p>Price: ₹{{ product.price }}</p>
+                {% endfor %}
             </div>
-            {% endfor %} 
-        </div>
+        </section>
+        {% endif %}
+
+        <section class="products-section">
+            <div class="products-section-header">
+                <h2 class="section-title">
+                    {% if search_query %}
+                    Results for &ldquo;{{ search_query }}&rdquo;
+                    {% else %}
+                    All products
+                    {% endif %}
+                </h2>
+                {% if search_query %}
+                <a href="{% url 'home' %}" class="btn btn-secondary btn-sm">Clear search</a>
+                {% endif %}
+            </div>
+
+            {% if product_data %}
+            {% include 'includes/product_grid.html' %}
+            {% else %}
+            <p class="empty-state">
+                {% if search_query %}
+                No products match your search. <a href="{% url 'home' %}">Browse all products</a>.
+                {% else %}
+                No products yet. <a href="{% url 'add_product' %}">Add the first product</a>.
+                {% endif %}
+            </p>
+            {% endif %}
+        </section>
     </div>
 </div>
 {% endblock %}

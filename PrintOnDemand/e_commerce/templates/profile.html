@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Snazzy{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <header class="profile-header">
+        <div class="profile-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</div>
+        <div class="profile-header-text">
+            <h1 class="page-heading profile-name">{{ user.get_full_name|default:user.username }}</h1>
+            <p class="profile-username">@{{ user.username }}</p>
+            <p class="profile-meta">Member since {{ user.date_joined|date:"F j, Y" }}</p>
+        </div>
+    </header>
+
+    <div class="profile-stats">
+        <div class="profile-stat-card">
+            <span class="profile-stat-value">{{ stats.orders_count }}</span>
+            <span class="profile-stat-label">Orders</span>
+        </div>
+        <div class="profile-stat-card">
+            <span class="profile-stat-value">₹{{ stats.total_spent }}</span>
+            <span class="profile-stat-label">Total spent</span>
+        </div>
+        <div class="profile-stat-card">
+            <span class="profile-stat-value">{{ stats.products_listed }}</span>
+            <span class="profile-stat-label">Products listed</span>
+        </div>
+        <div class="profile-stat-card">
+            <span class="profile-stat-value">{{ stats.cart_item_count }}</span>
+            <span class="profile-stat-label">In cart</span>
+        </div>
+    </div>
+
+    <div class="profile-layout">
+        <aside class="profile-sidebar">
+            <nav class="profile-quick-links" aria-label="Account shortcuts">
+                <a href="{% url 'my_product' %}" class="profile-quick-link profile-quick-link--featured">
+                    <img src="{% static 'svg/stuff.svg' %}" alt="" class="profile-quick-link-icon">
+                    My Stuff
+                </a>
+                <a href="{% url 'view_cart' %}" class="profile-quick-link">My cart</a>
+                <a href="{% url 'add_product' %}" class="profile-quick-link">Sell a product</a>
+                <a href="{% url 'trending_view' %}" class="profile-quick-link">Trending</a>
+                <a href="{% url 'home' %}" class="profile-quick-link">Continue shopping</a>
+                <a href="mailto:snazzy423@gmail.com" class="profile-quick-link">Contact support</a>
+                <a href="{% url 'signout' %}" class="profile-quick-link profile-quick-link--signout">Sign out</a>
+            </nav>
+        </aside>
+
+        <div class="profile-main">
+            <section class="profile-card">
+                <h2 class="section-title">Account details</h2>
+                <dl class="profile-details-list">
+                    <div class="profile-detail-row">
+                        <dt>Username</dt>
+                        <dd>{{ user.username }}</dd>
+                    </div>
+                    <div class="profile-detail-row">
+                        <dt>Email</dt>
+                        <dd>{{ user.email|default:"Not set" }}</dd>
+                    </div>
+                    <div class="profile-detail-row">
+                        <dt>Name</dt>
+                        <dd>{{ user.get_full_name|default:"—" }}</dd>
+                    </div>
+                    <div class="profile-detail-row">
+                        <dt>Last login</dt>
+                        <dd>{{ user.last_login|date:"M j, Y g:i A"|default:"—" }}</dd>
+                    </div>
+                </dl>
+
+                <h3 class="profile-subtitle">Edit profile</h3>
+                <form method="post" class="profile-edit-form">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="input-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <span class="field-error">{{ field.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary button">Save changes</button>
+                </form>
+            </section>
+
+            <section class="profile-card">
+                <h2 class="section-title">Order history</h2>
+                {% if orders %}
+                <div class="order-history">
+                    {% for order in orders %}
+                    <article class="order-history-card">
+                        <div class="order-history-header">
+                            <div>
+                                <a href="{% url 'order_detail' order.id %}" class="order-history-id">Order #{{ order.id }}</a>
+                                <time class="order-history-date">{{ order.created_at|date:"M j, Y · g:i A" }}</time>
+                            </div>
+                            <div class="order-history-badges">
+                                <span class="badge badge--status badge--{{ order.status|lower }}">{{ order.status }}</span>
+                                <span class="badge badge--payment badge--{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+                            </div>
+                        </div>
+                        <ul class="order-history-items">
+                            {% for item in order.order_items.all %}
+                            <li>
+                                <span>{{ item.product.name }} × {{ item.quantity }}</span>
+                                <span>₹{{ item.price }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="order-history-footer">
+                            <span class="order-history-method">{{ order.get_payment_method_display|default:"—" }}</span>
+                            <strong class="order-history-total">₹{{ order.total_amount }}</strong>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No orders yet. <a href="{% url 'home' %}">Start shopping</a></p>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

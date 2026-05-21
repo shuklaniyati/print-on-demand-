@@ -1,0 +1,84 @@
+{% if razorpay_enabled %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function () {
+    document.querySelectorAll('.js-payment-form').forEach(function (form) {
+        form.addEventListener('submit', async function (event) {
+            const selected = form.querySelector('input[name="payment_method"]:checked');
+            if (!selected || selected.value !== 'razorpay') {
+                return;
+            }
+
+            event.preventDefault();
+            const payButton = form.querySelector('.btn-pay');
+            if (payButton) {
+                payButton.disabled = true;
+                payButton.textContent = 'Opening payment…';
+            }
+
+            const formData = new FormData(form);
+            const response = await fetch('{% url "place_order" %}', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.razorpay) {
+                alert(data.error || 'Could not start payment. Please try again.');
+                if (payButton) {
+                    payButton.disabled = false;
+                    payButton.textContent = payButton.dataset.label || 'Pay now';
+                }
+                return;
+            }
+
+            const options = {
+                key: data.razorpay.key,
+                amount: data.razorpay.amount,
+                currency: data.razorpay.currency,
+                name: 'Snazzy',
+                description: 'Order #' + data.razorpay.order_id,
+                order_id: data.razorpay.razorpay_order_id,
+                handler: function (response) {
+                    const verifyForm = document.createElement('form');
+                    verifyForm.method = 'POST';
+                    verifyForm.action = '{% url "verify_payment" %}';
+                    const fields = {
+                        csrfmiddlewaretoken: formData.get('csrfmiddlewaretoken'),
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        snazzy_order_id: data.razorpay.order_id,
+                    };
+                    Object.entries(fields).forEach(function ([name, value]) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = value;
+                        verifyForm.appendChild(input);
+                    });
+                    document.body.appendChild(verifyForm);
+                    verifyForm.submit();
+                },
+                prefill: {
+                    name: '{{ request.user.get_full_name|default:request.user.username }}',
+                    email: '{{ request.user.email }}',
+                },
+                theme: { color: '#6366f1' },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function () {
+                alert('Payment failed. Please try again.');
+                if (payButton) {
+                    payButton.disabled = false;
+                    payButton.textContent = payButton.dataset.label || 'Pay now';
+                }
+            });
+            rzp.open();
+        });
+    });
+})();
+</script>
+{% endif %}

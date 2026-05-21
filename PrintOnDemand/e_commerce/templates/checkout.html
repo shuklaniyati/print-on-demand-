@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - Snazzy{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+    <h1 class="page-heading">Checkout</h1>
+
+    {% if payment_demo_mode %}
+    <p class="payment-demo-banner">Demo mode: payments are simulated. Add Razorpay keys in settings for live payments.</p>
+    {% endif %}
+
+    <div class="checkout-layout">
+        <section class="checkout-summary">
+            <h2 class="section-title">Order summary</h2>
+            <ul class="checkout-items">
+                {% for item in line_items %}
+                <li class="checkout-item">
+                    <div class="checkout-item-info">
+                        {% if item.product_image %}
+                        <img src="{{ item.product_image }}" alt="{{ item.product_name }}">
+                        {% endif %}
+                        <div>
+                            <strong>{{ item.product_name }}</strong>
+                            <span>Qty: {{ item.quantity }}</span>
+                        </div>
+                    </div>
+                    <span class="checkout-item-price">₹{{ item.line_total }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="checkout-total-row">
+                <span>Total</span>
+                <strong>₹{{ total_amount }}</strong>
+            </div>
+        </section>
+
+        <section class="checkout-payment">
+            <h2 class="section-title">Payment</h2>
+            <form method="post" action="{% url 'place_order' %}" class="checkout-form" id="checkout-form">
+                {% csrf_token %}
+                <input type="hidden" name="source" value="{{ source }}">
+                {% if product_id %}
+                <input type="hidden" name="product_id" value="{{ product_id }}">
+                <input type="hidden" name="quantity" value="{{ quantity }}">
+                {% endif %}
+
+                {% include 'includes/payment_methods.html' %}
+
+                <button type="submit" class="btn btn-primary button btn-pay" id="pay-button">
+                    Pay ₹{{ total_amount }}
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('checkout-form').classList.add('js-payment-form');
+    const payBtn = document.getElementById('pay-button');
+    if (payBtn) payBtn.dataset.label = 'Pay ₹{{ total_amount }}';
+</script>
+{% include 'includes/payment_form_script.html' %}
+{% endblock %}

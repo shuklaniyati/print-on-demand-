@@ -24,14 +24,13 @@ class OrderItemInline(admin.TabularInline):
 
 # Register the Order model
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'created_at', 'total_amount')
-    list_filter = ('status', 'created_at')  # Use created_at instead of order_date
-    search_fields = ('user__username',)
+    list_display = (
+        'id', 'user', 'status', 'payment_method',
+        'payment_status', 'total_amount', 'created_at',
+    )
+    list_filter = ('status', 'payment_status', 'payment_method', 'created_at')
+    search_fields = ('user__username', 'razorpay_order_id', 'razorpay_payment_id')
     inlines = [OrderItemInline]
-
-    # Display total amount in the admin list
-    def total_amount(self, obj):
-        return sum(item.price * item.quantity for item in obj.order_items.all())
-    total_amount.short_description = 'Total Amount'
+    readonly_fields = ('razorpay_order_id', 'razorpay_payment_id', 'created_at')
 
 admin.site.register(Order, OrderAdmin)

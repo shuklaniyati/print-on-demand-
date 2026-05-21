@@ -74,25 +74,52 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     """Model for orders."""
+
+    PAYMENT_METHOD_CHOICES = [
+        ('razorpay', 'Card / UPI / Netbanking (Razorpay)'),
+        ('upi', 'UPI'),
+        ('card', 'Debit / Credit Card'),
+        ('cod', 'Cash on Delivery'),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
-        max_length=50, 
+        max_length=50,
         choices=[
             ('Pending', 'Pending'),
             ('Processing', 'Processing'),
             ('Shipped', 'Shipped'),
             ('Delivered', 'Delivered'),
         ],
-        default='Pending'
+        default='Pending',
     )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        blank=True,
+    )
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='pending',
+    )
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    razorpay_order_id = models.CharField(max_length=255, blank=True)
+    razorpay_payment_id = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.username}"
 
-    def total_amount(self):
-        """Calculate the total amount of the order."""
-        return sum(item.product.price * item.quantity for item in self.order_items.all())
+    def computed_total(self):
+        """Calculate total from line items (fallback if total_amount unset)."""
+        return sum(item.price * item.quantity for item in self.order_items.all())
 
 
 class OrderItem(models.Model):
@@ -104,3 +131,7 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
+
+    @property
+    def line_total(self):
+        return self.price * self.quantity

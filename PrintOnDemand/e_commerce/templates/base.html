@@ -5,63 +5,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Snazzy{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/index.css' %}">
-    <script src="{% static 'js/index.js' %}"></script>
+    <script src="{% static 'js/index.js' %}" defer></script>
 </head>
 <body>
-    <!-- Navbar -->
-    <div class="navbar">
+    <header class="navbar">
         <div class="container1">
-            <div class="menu">
+            <button type="button" class="menu-btn" id="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="home-sidebar">
                 <img src="{% static 'svg/menu.svg' %}" alt="">
-            </div>
+            </button>
             <h2><a href="{% url 'home' %}" id="website-name">Snazzy</a></h2>
-            <div class="search">
-                <input type="text" placeholder="Search for products">
-                <img src="{% static 'svg/search.svg' %}" alt="">
-            </div>
+            <form class="search" action="{% url 'home' %}" method="get" role="search">
+                <input type="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search products" aria-label="Search products">
+                <button type="submit" class="search-submit" aria-label="Search">
+                    <img src="{% static 'svg/search.svg' %}" alt="">
+                </button>
+            </form>
         </div>
         <div class="container2">
-            <div class="signin">
-                <a href="{% url 'signin' %}" style="color: black; margin-right: 10px;">Sign in</a>
-            </div>
-            <div class="signup">
-                <a href="{% url 'signup' %}" style="color: black; margin-right: 10px;">Sign up</a>
-            </div>
-            <div class="signout">
-                <a href="{% url 'signout' %}" style="color: black; margin-right: 10px;">Sign Out!</a>
-            </div>
-            <div class="shopping">
-                <a href="{% url 'view_cart' %}"><img src="{% static 'svg/shopping.svg' %}" alt=""></a>
-            </div>
+            {% if user.is_authenticated %}
+            <a href="{% url 'add_product' %}" class="nav-link">Sell</a>
+            <a href="{% url 'profile' %}" class="nav-profile nav-link-icon" aria-label="My profile">
+                <img src="{% static 'svg/profile.svg' %}" alt="">
+            </a>
+            {% else %}
+            <a href="{% url 'signin' %}" class="nav-link">Sign in</a>
+            <a href="{% url 'signup' %}" class="nav-link nav-link--primary">Sign up</a>
+            {% endif %}
+            <a href="{% url 'view_cart' %}" class="shopping nav-link-icon" aria-label="View cart">
+                <img src="{% static 'svg/shopping.svg' %}" alt="">
+            </a>
         </div>
-    </div>
+    </header>
 
-    <!-- Main Content -->
-    <div class="container">
+    {% if messages %}
+    <div class="flash-messages" role="status">
+        {% for message in messages %}
+        <p class="flash-message flash-message--{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="container">
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
+
     {% block scripts %}
-    <!-- Scripts will go here -->
     {% endblock %}
-    <!-- Footer -->
+
     <footer class="footer">
         <ul>
-            <li><a href="#">About Us</a></li>
-            <li><a href="#">Help</a></li>
-            <li><a href="#">Contact Us</a></li>
+            <li><a href="{% url 'home' %}">About Us</a></li>
+            <li><a href="{% url 'trending_view' %}">Trending</a></li>
+            <li><a href="mailto:snazzy423@gmail.com">Contact Us</a></li>
             <li><a href="mailto:snazzy423@gmail.com">snazzy423@gmail.com</a></li>
-            <li><a href="#">My Account</a></li>
-            <li><a href="#">Community Guidelines</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'profile' %}">My Account</a></li>
+            <li><a href="{% url 'view_cart' %}">My Cart</a></li>
+            {% else %}
+            <li><a href="{% url 'signin' %}">My Account</a></li>
+            {% endif %}
+            <li><a href="{% url 'add_product' %}">Sell on Snazzy</a></li>
         </ul>
         <ul>
             <li><a href="/admin/">Admin</a></li>
-            <li><a href="#">Track my order</a></li>
-            <li><a href="#">Return Policy</a></li>
-            <li><a href="#">Sitemap</a></li>
-            <li><a href="#">Careers</a></li>
-            <li><a href="#">Zazzle Ideas</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'profile' %}">Order history</a></li>
+            {% else %}
+            <li><a href="{% url 'signin' %}?next={% url 'view_cart' %}">Track my order</a></li>
+            {% endif %}
+            <li><a href="{% url 'home' %}">Return Policy</a></li>
+            <li><a href="{% url 'home' %}">Sitemap</a></li>
+            <li><a href="{% url 'home' %}">Careers</a></li>
+            <li><a href="{% url 'trending_view' %}">Trending Ideas</a></li>
         </ul>
     </footer>
 </body>

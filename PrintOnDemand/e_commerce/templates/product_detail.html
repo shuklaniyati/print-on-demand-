@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ product.name }} - Snazzy{% endblock %}
+
 {% block content %}
 <div class="product-container">
     <div class="product-card">
@@ -20,13 +22,67 @@
             <div class="added-by">
                 Sold by: <span>{{ product.added_by }}</span>
             </div>
-            
-            <!-- Add to Cart Button -->
-            <form method="post" action="{% url 'add_to_cart' product.id %}">
-                {% csrf_token %}
-                <button type="submit" class="btn-add-to-cart">Add to Cart</button>
-            </form>
+
+            <div class="product-actions">
+                <form method="post" action="{% url 'add_to_cart' product.id %}" class="product-cart-form">
+                    {% csrf_token %}
+                    <label for="cart-quantity" class="qty-label">Quantity</label>
+                    <input type="number" id="cart-quantity" name="quantity" value="1" min="1" class="quantity-input product-qty-input">
+                    <button type="submit" class="btn btn-secondary btn-add-to-cart">Add to Cart</button>
+                </form>
+
+                <div class="product-payment-block">
+                    <h3 class="payment-block-title">Payment options</h3>
+                    {% if payment_demo_mode %}
+                    <p class="payment-demo-banner payment-demo-banner--compact">Demo mode: payments simulated without Razorpay keys.</p>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'place_order' %}" class="js-payment-form product-buy-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="source" value="buy_now">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <label for="buy-quantity" class="qty-label">Quantity</label>
+                        <input type="number" id="buy-quantity" name="quantity" value="1" min="1"
+                               class="quantity-input product-qty-input" data-unit-price="{{ product.price }}">
+
+                        {% include 'includes/payment_methods.html' %}
+
+                        <button type="submit" class="btn btn-primary button btn-pay btn-buy-now"
+                                data-label="Buy now — Pay ₹{{ product.price }}">
+                            Buy now — Pay ₹<span class="pay-amount">{{ product.price }}</span>
+                        </button>
+                        <a href="{% url 'checkout_buy_now' product.id %}" class="link-checkout-review">Review at checkout</a>
+                    </form>
+                    {% else %}
+                    <p class="payment-login-hint"> <a href="{% url 'signin' %}?next={{ request.path }}">Sign in</a> to buy this product.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        const qtyInput = document.getElementById('buy-quantity');
+        const payAmount = document.querySelector('.product-buy-form .pay-amount');
+        const payButton = document.querySelector('.product-buy-form .btn-pay');
+        if (!qtyInput || !payAmount) return;
+
+        const unitPrice = parseFloat(qtyInput.dataset.unitPrice);
+        function updatePayLabel() {
+            const total = (unitPrice * Math.max(1, parseInt(qtyInput.value, 10) || 1)).toFixed(2);
+            payAmount.textContent = total;
+            if (payButton) payButton.dataset.label = 'Buy now — Pay ₹' + total;
+        }
+        qtyInput.addEventListener('input', updatePayLabel);
+        updatePayLabel();
+    })();
+</script>
+{% if user.is_authenticated %}
+{% include 'includes/payment_form_script.html' %}
+{% endif %}
 {% endblock %}

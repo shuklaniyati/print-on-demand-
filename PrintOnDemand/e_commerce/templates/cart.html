@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="cart-container">
-    <h1>{{cart_data.user}} Cart</h1>
+    <h1 class="page-heading">{{ cart_data.user }}'s Cart</h1>
+
+    {% if has_items %}
     <table class="cart-table">
         <thead>
             <tr>
@@ -25,7 +27,7 @@
                     </div>
                 </td>
                 <td>
-                    <input type="number" value="{{ item.quantity }}" min="1" class="quantity-input" 
+                    <input type="number" value="{{ item.quantity }}" min="1" class="quantity-input"
                            data-product-id="{{ item.product_id }}" onchange="updateQuantity(this)">
                 </td>
                 <td>₹{{ item.price }}</td>
@@ -40,9 +42,33 @@
             {% endfor %}
         </tbody>
     </table>
+
     <div class="cart-summary">
         <h2>Total: ₹<span id="total-price">{{ cart_data.total_price }}</span></h2>
     </div>
+
+    <section class="cart-payment-panel">
+        <h2 class="section-title">Payment</h2>
+        {% if payment_demo_mode %}
+        <p class="payment-demo-banner">Demo mode: UPI, card, and COD payments are simulated instantly.</p>
+        {% endif %}
+
+        <form method="post" action="{% url 'place_order' %}" class="js-payment-form cart-payment-form">
+            {% csrf_token %}
+            <input type="hidden" name="source" value="cart">
+            {% include 'includes/payment_methods.html' %}
+            <div class="payment-actions">
+                <button type="submit" class="btn btn-primary button btn-pay"
+                        data-label="Pay ₹{{ cart_data.total_price }}">
+                    Pay ₹<span class="pay-amount">{{ cart_data.total_price }}</span>
+                </button>
+                <a href="{% url 'checkout_cart' %}" class="btn btn-secondary">Review at checkout</a>
+            </div>
+        </form>
+    </section>
+    {% else %}
+    <p class="empty-state">Your cart is empty. <a href="{% url 'home' %}">Browse products</a></p>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -57,28 +83,27 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Update the total price for the item
             const totalCell = inputElement.closest('tr').querySelector('.total-price');
             totalCell.textContent = '₹' + data.new_total_price;
-
-            // Update the overall total price
             updateCartTotal();
         });
     }
 
     function updateCartTotal() {
         let total = 0;
-        const totalCells = document.querySelectorAll('.total-price');
-        totalCells.forEach(cell => {
+        document.querySelectorAll('.total-price').forEach(cell => {
             const price = parseFloat(cell.textContent.replace('₹', '').trim());
             total += price;
         });
-        
-        // Update the displayed total in the cart-summary
-        document.getElementById('total-price').textContent = total.toFixed(2);
+        const formatted = total.toFixed(2);
+        document.getElementById('total-price').textContent = formatted;
+        const payAmount = document.querySelector('.pay-amount');
+        const payButton = document.querySelector('.btn-pay');
+        if (payAmount) payAmount.textContent = formatted;
+        if (payButton) payButton.dataset.label = 'Pay ₹' + formatted;
     }
 
-    // Initial call to set the correct total when the page loads
     updateCartTotal();
 </script>
+{% include 'includes/payment_form_script.html' %}
 {% endblock %}

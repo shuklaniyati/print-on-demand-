@@ -4,21 +4,11 @@
 
 {% block content %}
 <div class="category-container">
-    <h1>My Stuffs"</h1>
-    <div class="Product_list" style="display: flex;">
-        {% for product in product_data %}
-        <div class="products">
-            <a href="{% url 'product_detail' pk=product.id %}">
-                {% if product.product_image %}
-                    <img src="{{ product.product_image }}" alt="{{ product.name }}">
-                {% else %}
-                    <p>No image available</p>
-                {% endif %}
-            </a>
-            <h3>{{ product.name }}</h3>
-            <p>Price: ₹{{ product.price }}</p>
-        </div>
-        {% endfor %} 
-    </div>
+    <h1 class="page-heading">My Stuff</h1>
+    {% if product_data %}
+    {% include 'includes/product_grid.html' %}
+    {% else %}
+    <p class="empty-state">You haven't listed any products yet. <a href="{% url 'add_product' %}">Add your first product</a></p>
+    {% endif %}
 </div>
 {% endblock %}

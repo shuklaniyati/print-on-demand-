@@ -1,0 +1,30 @@
+<div class="payment-methods" role="radiogroup" aria-label="Payment method">
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="razorpay" {% if default_method == 'razorpay' or not default_method %}checked{% endif %}>
+        <span class="payment-option-body">
+            <span class="payment-option-title">Online payment</span>
+            <span class="payment-option-desc">Card, UPI, netbanking via Razorpay</span>
+        </span>
+    </label>
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="upi" {% if default_method == 'upi' %}checked{% endif %}>
+        <span class="payment-option-body">
+            <span class="payment-option-title">UPI</span>
+            <span class="payment-option-desc">Pay with any UPI app</span>
+        </span>
+    </label>
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="card" {% if default_method == 'card' %}checked{% endif %}>
+        <span class="payment-option-body">
+            <span class="payment-option-title">Debit / Credit card</span>
+            <span class="payment-option-desc">Visa, Mastercard, RuPay</span>
+        </span>
+    </label>
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="cod" {% if default_method == 'cod' %}checked{% endif %}>
+        <span class="payment-option-body">
+            <span class="payment-option-title">Cash on delivery</span>
+            <span class="payment-option-desc">Pay when your order arrives</span>
+        </span>
+    </label>
+</div>

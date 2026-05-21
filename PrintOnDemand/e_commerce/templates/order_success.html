@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Order confirmed - Snazzy{% endblock %}
+
+{% block content %}
+<div class="order-success-page">
+    <div class="order-success-card">
+        <div class="order-success-icon">✓</div>
+        <h1 class="page-heading">Order placed successfully</h1>
+        <p class="order-success-meta">Order #{{ order.id }} · {{ order.get_payment_method_display }}</p>
+        <p class="order-success-amount">Amount paid: <strong>₹{{ order.total_amount }}</strong></p>
+        <p class="order-success-status">Status: {{ order.get_payment_status_display }} · {{ order.status }}</p>
+
+        <ul class="checkout-items order-success-items">
+            {% for item in order.order_items.all %}
+            <li class="checkout-item">
+                <div class="checkout-item-info">
+                    <div>
+                        <strong>{{ item.product.name }}</strong>
+                        <span>Qty: {{ item.quantity }}</span>
+                    </div>
+                </div>
+                <span class="checkout-item-price">₹{{ item.price }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="order-success-actions">
+            <a href="{% url 'home' %}" class="btn btn-primary">Continue shopping</a>
+            <a href="{% url 'profile' %}" class="btn btn-secondary">View profile</a>
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary">Order details</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
